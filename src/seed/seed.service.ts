@@ -4,9 +4,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Item } from 'src/items/entities/item.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
-import { SEED_ITEMS, SEED_USERS } from './data/seed-data';
+import { SEED_ITEMS, SEED_LIST, SEED_USERS } from './data/seed-data';
 import { UsersService } from '../users/users.service';
 import { ItemsService } from '../items/items.service';
+import { ListItem } from 'src/list-item/entities/list-item.entity';
+import { List } from 'src/lists/entities/list.entity';
+import { ListItemService } from '../list-item/list-item.service';
+import { ListsService } from '../lists/lists.service';
 
 @Injectable()
 export class SeedService {
@@ -19,11 +23,18 @@ export class SeedService {
     @InjectRepository(Item)
     private readonly itemsRepository: Repository<Item>,
 
+    @InjectRepository(ListItem)
+    private readonly listItemRepository: Repository<ListItem>,
+
+    @InjectRepository(List)
+    private readonly listRepository: Repository<List>,
+
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
 
     private readonly usersService: UsersService,
-
+    private readonly listItemService : ListItemService,
+    private readonly listsService : ListsService,
     private readonly itemsService : ItemsService
   ) {
     // * vamos a validar si la variable STATE es igual a prod y si así lo es, vamos a mandar true en el isProd para validar que estamos en produccion mas adelante
@@ -42,12 +53,31 @@ export class SeedService {
     const user = await this.loadUsers();
     // Crear Items
     await this.loadItems(user);
+    //Crear Lists
+    const list = await this.loadLists(user)
+    //Creat listItems
+    const items = await this.itemsService.findAll(user, { limit: 15, offset: 0},{});
+    await this.loadListItems(list, items )
 
     return true;
   }
 
   async deleteDatabase() {
-    // borrar items
+    // borrar listItems
+    await this.listItemRepository
+      .createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+   
+      // borrar listItems
+    await this.listRepository
+      .createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+    
+      // borrar items
     await this.itemsRepository
       .createQueryBuilder()
       .delete()
@@ -83,4 +113,39 @@ export class SeedService {
 
     return true;
   }
+  
+  async loadLists(
+    user: User,
+  ): Promise<List> {
+    
+    const lists = [];
+
+    for ( const list of SEED_LIST ){
+      lists.push( await this.listsService.create( list, user ) )
+    }
+
+    await Promise.all( lists ) ;
+    
+    return lists[0];
+  }
+
+  async loadListItems(
+    list: List,
+    items: Item[]
+  ){
+    
+    const listItems = []
+
+    for ( const item of items) {
+      listItems.push( await this.listItemService.create( {
+        quantity: Math.round( Math.random() * 10 ),
+        listId: list.id,
+        itemId: item.id,
+        completed: Math.round( Math.random() * 1 ) === 0 ? false : true
+      } ) )
+    }
+
+    return await Promise.all( listItems )
+  }
+
 }

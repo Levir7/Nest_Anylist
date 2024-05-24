@@ -9,13 +9,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ValidRoles } from '../auth/enums/valid-roles.enums';
 import { ItemsService } from '.././items/items.service';
+import { Item } from '../items/entities/item.entity';
+import { PaginationArgs, SearchArgs } from 'src/common/dto/args';
+import { ListsService } from '../lists/lists.service';
+import { List } from 'src/lists/entities/list.entity';
 
 @Resolver(() => User)
 @UseGuards(JwtAuthGuard)
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
-    private readonly itemsService: ItemsService
+    private readonly itemsService: ItemsService,
+    private readonly listsService: ListsService,
   ) {}
 
   @Query(() => [User], { name: 'users' })
@@ -58,6 +63,43 @@ export class UsersResolver {
   ): Promise<number> {
     
     return this.itemsService.itemCountByUser(user)
+  }
+
+
+   // este es un campo calculado 
+   @ResolveField( () => [Item], { name: 'items'} ) // este es para agregar el campo a nuestro schema de User
+   async getItemsByUser(
+     @CurrentUser([ValidRoles.admin]) adminUser: User,
+     @Parent() user: User, // con este decorador es para obtener la información del padre ( User )
+     @Args()  paginationArgs : PaginationArgs,
+     @Args() searchArgs : SearchArgs
+   ): Promise<Item[]> {
+     
+     return this.itemsService.findAll( user, paginationArgs, searchArgs)
+   }
+
+
+
+   // este es un campo calculado 
+   @ResolveField( () => [List], { name: 'lists'} ) // este es para agregar el campo a nuestro schema de User
+   async getListsByUser(
+     @CurrentUser([ValidRoles.admin]) adminUser: User,
+     @Parent() user: User, // con este decorador es para obtener la información del padre ( User )
+     @Args()  paginationArgs : PaginationArgs,
+     @Args() searchArgs : SearchArgs
+   ): Promise<List[]> {
+     
+     return this.listsService.findAll( user, paginationArgs, searchArgs)
+   }
+
+   
+  @ResolveField( () => Int, { name: 'listCount'} ) // este es para agregar el campo a nuestro schema de User
+  async listCount(
+    @CurrentUser([ValidRoles.admin]) adminUser: User,
+    @Parent() user: User, // con este decorador es para obtener la información del padre ( User )
+  ): Promise<number> {
+    
+    return this.listsService.listsCountByUser(user)
   }
 
 

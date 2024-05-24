@@ -10,6 +10,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtService } from '@nestjs/jwt';
 import { SeedModule } from './seed/seed.module';
+import { CommonModule } from './common/common.module';
+import { ListsModule } from './lists/lists.module';
+import { ListItemModule } from './list-item/list-item.module';
 
 
 @Module({
@@ -28,11 +31,11 @@ import { SeedModule } from './seed/seed.module';
           ApolloServerPluginLandingPageLocalDefault()
         ],
         context({req}) {
-          const token = req.headers.authorization.replace('Bearer ', '')
-          if( !token ) throw Error('Token needed')
+          // const token = req.headers.authorization.replace('Bearer ', '')
+          // if( !token ) throw Error('Token needed')
 
-          const payload = jwtService.decode(token)
-          if( !payload ) throw Error('Token not valid')
+          // const payload = jwtService.decode(token)
+          // if( !payload ) throw Error('Token not valid')
         }
       })
     }),
@@ -68,6 +71,12 @@ import { SeedModule } from './seed/seed.module';
     AuthModule,
 
     SeedModule,
+
+    CommonModule,
+
+    ListsModule,
+
+    ListItemModule,
   ],
   controllers: [],
   exports: [],

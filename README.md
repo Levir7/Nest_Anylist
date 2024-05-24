@@ -22,8 +22,12 @@ docker-compose up -d
 npm run start:dev
 ```
 
-6. Visitar el sitio:
+
+7. Visitar el sitio:
 
 ```
 localhost:3000
 ```
+
+
+6. ejecutar la "mutation" executeSeed para llenar la base de datos con información de prueba
